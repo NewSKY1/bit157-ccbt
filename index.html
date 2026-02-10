@@ -231,8 +231,16 @@ function submitQuiz() {
   document.getElementById("gradeResult").innerText =
     `Grade: ${grade}`;
 }
+ <script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js")
+    .then(() => console.log("Service Worker Registered"));
+}
+</script>
+ 
 </script>
 
 </body>
 </html>
+
 
