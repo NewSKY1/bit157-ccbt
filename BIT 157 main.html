@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BIT 157 CBT Portal</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #eef2f5;
+  background-image: url("Screenshot 2025-04-29 185113.png"); /* Replace with your image path */
+  background-size: cover;
+  background-position: center;
+  background-repeat: repeat;
+  height: 100vh;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial,sans-serif;
+  text-shadow: 0px 0px 0px black;
+}
+.container {
+  max-width: 600px;
+  margin: auto;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+}
+h1, h2 {
+  text-align: center;
+}
+.timer {
+  text-align: center;
+  font-size: 22px;
+  color: red;
+  margin-bottom: 10px;
+}
+.question {
+  font-size: 18px;
+}
+.options label {
+  display: block;
+  margin: 8px 0;
+}
+button {
+  width: 100%;
+  padding: 12px;
+  font-size: 18px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+}
+.hidden {
+  display: none;
+}
+@media (max-width: 600px) {
+  .container {
+    padding: 15px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- LOGIN -->
+<div id="login">
+  <h1>BIT 157 – CBT Portal</h1>
+  <p>Enter your name to begin</p>
+  <input type="text" id="studentName" placeholder="Student Full Name"
+         style="width:90%;padding:12px;">
+  <br><br>
+  <button onclick="startQuiz()">Start Quiz</button>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="hidden">
+  <h2 id="welcome"></h2>
+  <div class="timer">
+    Question <span id="qNum"></span>/30 |
+    Time Left: <span id="qTime">10</span>s
+  </div>
+
+  <div class="question" id="questionText"></div>
+  <div class="options" id="options"></div>
+
+  <br>
+  <button onclick="nextQuestion()">Next</button>
+</div>
+
+<!-- RESULT -->
+<div id="result" class="hidden">
+  <h2>Quiz Result</h2>
+  <p id="studentNameResult"></p>
+  <p id="studentResult"></p>
+  <p id="scoreResult"></p>
+  <p id="gradeResult"></p>
+</div>
+
+</div>
+
+<script>
+// 🔊 BEEP SOUND
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function beep() {
+  const osc = audioCtx.createOscillator();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
+  osc.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 1.15);
+}
+
+// 📘 QUESTIONS (30)
+const questions = [
+  { q:"1. A computer program is:", o:{A:"A computer device",B:"A set of instructions",C:"A language",D:"An OS"}, a:"B"},
+  { q:"2. An algorithm is:", o:{A:"A program",B:"A step-by-step solution",C:"Hardware",D:"Data"}, a:"B"},
+  { q:"3. Which property ensures termination?", o:{A:"Input",B:"Output",C:"Finiteness",D:"Generality"}, a:"C"},
+  { q:"4. Low-level language example:", o:{A:"Python",B:"Java",C:"Assembly",D:"HTML"}, a:"C"},
+  { q:"5. Interpreted language executes:", o:{A:"Before run",B:"Line by line",C:"By hardware",D:"Once"}, a:"B"},
+  { q:"6. SQL is:", o:{A:"General",B:"Low-level",C:"Domain-specific",D:"Procedural"}, a:"C"},
+  { q:"7. Decision symbol is:", o:{A:"Oval",B:"Rectangle",C:"Diamond",D:"Parallelogram"}, a:"C"},
+  { q:"8. int stores:", o:{A:"Text",B:"Whole numbers",C:"Decimal",D:"True/False"}, a:"B"},
+  { q:"9. bool stores:", o:{A:"Numbers",B:"Characters",C:"True/False",D:"Strings"}, a:"C"},
+  { q:"10. Variable is:", o:{A:"Fixed value",B:"Memory location",C:"Operator",D:"Loop"}, a:"B"},
+  { q:"11. Valid variable name:", o:{A:"1age",B:"last name",C:"myAge",D:"int"}, a:"C"},
+  { q:"12. Top-down starts from:", o:{A:"Small tasks",B:"Main problem",C:"Code",D:"Testing"}, a:"B"},
+  { q:"13. Bottom-up is common in:", o:{A:"Procedural",B:"OOP",C:"Assembly",D:"Hardware"}, a:"B"},
+  { q:"14. Pseudocode is:", o:{A:"Executable",B:"Machine code",C:"Design tool",D:"Compiler"}, a:"C"},
+  { q:"15. Flowcharts use:", o:{A:"Random shapes",B:"Code",C:"Standard symbols",D:"Text only"}, a:"C"},
+  { q:"16. Rectangle means:", o:{A:"Start",B:"Decision",C:"Process",D:"Input"}, a:"C"},
+  { q:"17. Oval represents:", o:{A:"Input",B:"Start/End",C:"Process",D:"Flow"}, a:"B"},
+  { q:"18. Parallelogram means:", o:{A:"Decision",B:"Process",C:"Input/Output",D:"End"}, a:"C"},
+  { q:"19. Algorithm must be:", o:{A:"Ambiguous",B:"Infinite",C:"Unambiguous",D:"Complex"}, a:"C"},
+  { q:"20. First step in programming:", o:{A:"Coding",B:"Testing",C:"Understand problem",D:"Debugging"}, a:"C"},
+  { q:"21. Which is not a programming paradigm?", o:{A:"Procedural",B:"OOP",C:"Functional",D:"Relational"}, a:"D"},
+  { q:"22. Which of the following is NOT a step in computer programming?", o:{A:"Understand the problem",B:"Prepare a flowchart",C:"Debug the hardware",D:"Convert the solution into code"}, a:"C"},
+  { q:"23. Which variable name is NOT valid?", o:{A:"employeeLastName",B:"empLast",C:"my1stName",D:"last name"}, a:"D"},
+  { q:"24. Which of the following is NOT a property of an algorithm?", o:{A:"Finiteness",B:"Definiteness",C:"Generality",D:"Ambiguity"}, a:"D"},
+  { q:"25. Which flowchart symbol represents a process?", o:{A:"Oval",B:"Rectangle",C:"Diamond",D:"Parallelogram"}, a:"B"},
+  { q:"26. Algorithms are only used to solve one specific problem, they cannot be applied to other problems.", o:{A:"True",B:"False"}, a:"B"},
+  { q:"27. Pseudocode can be executed directly by a computer", o:{A:"True",B:"False"}, a:"B"},
+  { q:"28. Top-down design begins by solving the smallest components first.", o:{A:"True", B:"False"}, a:"B"},
+  { q:"29. Flowcharts help visualize the execution of a program.", o:{A:"True", B:"False"}, a:"A"},
+  { q:"30. A variable must always be initialized when declared.",o:{A:"True",B:"False"}, a:"B"}
+];
+
+let current = 0;
+let score = 0;
+let answers = {};
+let timeLeft = 10;
+let qTimer;
+
+function startQuiz() {
+  const name = document.getElementById("studentName").value;
+  if (!name) return alert("Enter your name");
+
+  document.getElementById("welcome").innerText = "Welcome, " + name;
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("quiz").classList.remove("hidden");
+
+  loadQuestion();
+}
+
+function loadQuestion() {
+  clearInterval(qTimer);
+  timeLeft = 10;
+  document.getElementById("qTime").innerText = timeLeft;
+  document.getElementById("qNum").innerText = current + 1;
+
+  const q = questions[current];
+  document.getElementById("questionText").innerText = q.q;
+
+  let html = "";
+  for (let k in q.o) {
+    html += `
+      <label>
+        <input type="radio" name="option" value="${k}">
+        ${k}. ${q.o[k]}
+      </label>`;
+  }
+  document.getElementById("options").innerHTML = html;
+
+  qTimer = setInterval(() => {
+    timeLeft--;
+    document.getElementById("qTime").innerText = timeLeft;
+
+    if (timeLeft === 2) beep();
+    if (timeLeft === 1) beep();
+    if (timeLeft <= 0)  nextQuestion();
+    }
+  , 1000);
+}
+
+function nextQuestion() {
+  clearInterval(qTimer);
+  const sel = document.querySelector('input[name="option"]:checked');
+  answers[current] = sel ? sel.value : null;
+
+  current++;
+  if (current < questions.length) loadQuestion();
+  else submitQuiz();
+}
+
+function submitQuiz() {
+  questions.forEach((q, i) => {
+    if (answers[i] === q.a) score++;
+  });
+
+  let grade = "F";
+  if (score >= 25) grade = "A";
+  else if (score >= 20) grade = "B";
+  else if (score >= 15) grade = "C";
+  else if (score >= 10) grade = "D";
+
+  document.getElementById("quiz").classList.add("hidden");
+  document.getElementById("result").classList.remove("hidden");
+
+  document.getElementById("studentResult").innerText =
+    "Student: " + document.getElementById("studentName").value;
+  document.getElementById("scoreResult").innerText =
+    `Score: ${score} / 30`;
+  document.getElementById("gradeResult").innerText =
+    `Grade: ${grade}`;
+}
+</script>
+
+</body>
+</html>
